@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#090b16">
+  <title>QUEEN ZARA | Pairing</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(ellipse at top,#29204b 0,#111326 42%,#080a12 100%);color:#f7f5ff;font-family:Inter,system-ui,sans-serif;display:grid;place-items:center;padding:22px}
+    .wrap{width:min(100%,460px)}.brand{text-align:center;margin-bottom:22px}.crown{font-size:42px;filter:drop-shadow(0 0 16px #b18cff)}h1{font-size:30px;letter-spacing:2px;margin:8px 0}.sub{color:#aaa8c4;font-size:13px}
+    .card{background:#141629eF;border:1px solid #ffffff18;border-radius:24px;padding:26px;box-shadow:0 24px 80px #0008;backdrop-filter:blur(16px)}
+    .status{display:flex;align-items:center;gap:9px;color:#c9c7dd;font-size:13px;margin-bottom:22px}.dot{width:9px;height:9px;border-radius:50%;background:#e9b44c;box-shadow:0 0 12px currentColor}.dot.online{background:#42d69a}
+    label{display:block;font-size:13px;color:#d4d1e8;margin:15px 0 8px}input{width:100%;border:1px solid #343653;background:#0c0e1c;color:white;border-radius:12px;padding:14px;font-size:15px;outline:none}input:focus{border-color:#a78bfa;box-shadow:0 0 0 3px #a78bfa22}
+    button{width:100%;margin-top:18px;padding:14px;border:0;border-radius:12px;background:linear-gradient(100deg,#8b5cf6,#c084fc);color:white;font-weight:800;font-size:14px;cursor:pointer}button:disabled{opacity:.55;cursor:wait}
+    .result{display:none;margin-top:20px;padding:18px;border:1px dashed #9b7df0;border-radius:14px;text-align:center;background:#8b5cf610}.code{font-size:29px;font-weight:800;letter-spacing:5px;margin:10px 0;color:#d8c7ff}.message{font-size:13px;color:#b9b6ce;line-height:1.6}.error{color:#ff9caa}.hint{font-size:12px;color:#88869f;line-height:1.6;margin-top:18px}.footer{text-align:center;color:#77758f;font-size:11px;margin-top:20px}
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <header class="brand"><div class="crown">👑</div><h1>QUEEN ZARA</h1><div class="sub">WHATSAPP PAIRING PORTAL</div></header>
+    <section class="card">
+      <div class="status"><span id="dot" class="dot"></span><span id="statusText">Checking bot connection...</span></div>
+      <form id="pairForm">
+        <label for="phone">WhatsApp number (with country code)</label>
+        <input id="phone" name="phone" inputmode="numeric" autocomplete="tel" placeholder="947XXXXXXXX" required>
+        <label for="pin">Private pairing PIN</label>
+        <input id="pin" name="pin" type="password" autocomplete="current-password" placeholder="Enter your private PIN" required>
+        <button id="submit" type="submit">GENERATE PAIRING CODE</button>
+      </form>
+      <div id="result" class="result"><div class="message">YOUR PAIRING CODE</div><div id="code" class="code"></div><div id="resultMessage" class="message">Open WhatsApp → Linked devices → Link a device → Link with phone number instead.</div></div>
+      <p id="notice" class="hint">Use only your own WhatsApp account or an account you are authorized to link. Keep your pairing PIN private. The pairing code is temporary.</p>
+    </section>
+    <div class="footer">POWERED BY SIRIMATH DEV &lt;/&gt;</div>
+  </main>
+<script>
+const statusText=document.getElementById('statusText'),dot=document.getElementById('dot');
+async function refreshStatus(){try{const r=await fetch('/api/status');const d=await r.json();statusText.textContent=d.status==='online'?'WhatsApp connected':d.status==='connecting'?'WhatsApp connecting...':'WhatsApp is starting / waiting for link';dot.classList.toggle('online',d.status==='online')}catch{statusText.textContent='Server unavailable'}}
+refreshStatus();setInterval(refreshStatus,7000);
+document.getElementById('pairForm').addEventListener('submit',async e=>{
+ e.preventDefault();const btn=document.getElementById('submit'),result=document.getElementById('result'),notice=document.getElementById('notice');
+ btn.disabled=true;btn.textContent='GENERATING...';result.style.display='none';notice.classList.remove('error');
+ try{
+  const response=await fetch('/api/pair',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone:document.getElementById('phone').value,pin:document.getElementById('pin').value})});
+  const data=await response.json();
+  if(!response.ok||!data.success)throw new Error(data.error||'Could not generate pairing code.');
+  document.getElementById('code').textContent=data.code;
+  document.getElementById('resultMessage').textContent=data.message+' Enter the code promptly; it expires.';
+  result.style.display='block';
+ }catch(err){notice.textContent=err.message;notice.classList.add('error')}
+ finally{btn.disabled=false;btn.textContent='GENERATE PAIRING CODE'}
+});
+</script>
+</body>
+</html>
